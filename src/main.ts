@@ -101,7 +101,9 @@ async function main(): Promise<void> {
         const actionInput = input.get();
         await run(actionInput);
     } catch (error) {
-        core.setFailed(error.message);
+        if (error instanceof Error) {
+            core.setFailed(error.message);
+        }
     }
 
     return;

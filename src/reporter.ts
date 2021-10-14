@@ -224,7 +224,7 @@ will not report an issue against it`,
 export async function reportIssues(
     client: github.GitHub,
     vulnerabilities: Array<interfaces.Vulnerability>,
-    warnings: Array<interfaces.Warning>,
+    _warnings: Array<interfaces.Warning>,
 ): Promise<void> {
     const { owner, repo } = github.context.repo;
 
@@ -248,45 +248,6 @@ export async function reportIssues(
         });
         core.info(
             `Created an issue for ${vulnerability.advisory.id}: ${issue.data.html_url}`,
-        );
-    }
-
-    for (const warning of warnings) {
-        let advisory: interfaces.Advisory;
-        switch (warning.kind) {
-            case 'unmaintained':
-            case 'informational':
-                advisory = warning.advisory;
-                break;
-            case 'yanked':
-                core.warning(
-                    `Crate ${warning.package.name} was yanked, but no issue will be reported about it`,
-                );
-                continue;
-            default:
-                core.warning(
-                    `Unknown warning kind ${warning.kind} found, please, file a bug`,
-                );
-                continue;
-        }
-
-        const reported = await alreadyReported(client, advisory.id);
-        if (reported) {
-            continue;
-        }
-
-        const body = nunjucks.renderString(templates.WARNING_ISSUE, {
-            warning: warning,
-            advisory: advisory,
-        });
-        const issue = await client.issues.create({
-            owner: owner,
-            repo: repo,
-            title: `${advisory.id}: ${advisory.title}`,
-            body: body,
-        });
-        core.info(
-            `Created an issue for ${advisory.id}: ${issue.data.html_url}`,
         );
     }
 }
